@@ -1,12 +1,13 @@
-﻿using BuisinessLayer.Filter.ActionFilter;
+﻿using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RepositaryLayer.DTO.RequestDto;
 
 namespace FundooNotes.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -21,9 +22,26 @@ namespace FundooNotes.Controllers
         public async Task<IActionResult> createUser(UserRequest request)
         {
                return Ok(await service.createUser(request));
-           
-           
         }
+
+        [HttpGet("Login/{Email}/{password}")]
+        [UserExceptionHandlerFilter]
+        public async Task<IActionResult> Login(String Email, String password)
+        {
+            return Ok(await service.Login(Email, password)); 
+        }
+        [HttpPut("forgotpass/{Email}")]
+        public String ChangePasswordRequest(String Email)
+        {
+            return service.ChangePasswordRequest(Email);
+        }
+
+        [HttpPut("otp/{otp}/{password}")]
+        public String ChangePassword(String otp,String password)
+        {
+            return service.ChangePassword(otp,password);
+        }
+
 
 
     }
