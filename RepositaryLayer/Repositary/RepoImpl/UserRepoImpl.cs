@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace RepositaryLayer.Repositary.RepoImpl
 {
     public class UserRepoImpl : IUserRepo
@@ -31,15 +32,18 @@ namespace RepositaryLayer.Repositary.RepoImpl
         {
             String Query = "Select * from User_Entity where UserEmail = @Email";
             IDbConnection connection = context.CreateConnection();
-            return await connection.QueryFirstAsync<UserEntity>(Query,new {Email=email});
+           
+               return await connection.QueryFirstAsync<UserEntity>(Query, new { Email = email });
+            
+            
 
         }
 
         public async Task<int> UpdatePassword(string mailid, string password)
         {
-            String Query = "update User_Entity set UserPassword = 'Password' where UserEmail = @mail";
+            String Query = "update User_Entity set UserPassword = @Password where UserEmail = @mail";
             IDbConnection connection= context.CreateConnection();
-           return await connection.ExecuteAsync(Query,new {mail=mailid});
+           return await connection.ExecuteAsync(Query,new {mail=mailid,Password=password});
         }
     }
 }

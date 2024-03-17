@@ -17,40 +17,41 @@ namespace BuisinessLayer.MailSender
     {
         public static void sendMail(String ToMail, String otp)
         {
-            /*SmtpClient client = new SmtpClient();
-            client.Port = 587;
-            client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            client.UseDefaultCredentials = false;
-            SmtpClient client = new SmtpClient("smtp.gmail.com", 587);
-            client.UseDefaultCredentials = false;
-            client.EnableSsl = true;
-            NetworkCredential credential = new NetworkCredential("subamraghu11154@gmail.com","Raghu2k02");
-           
-            client.Credentials = credential;
-            MailMessage message = new MailMessage("c", ToMail);
-            message.Subject = $"To Reset Your Password Enter the Below OTP \n {otp}";
-            message.Body = "<h1> this is a mail regarding password change</h1>";
-            message.IsBodyHtml = true;
-            client.Send(message);*/
-            SmtpClient client = new SmtpClient("smtp.gmail.com", 587);
-            client.UseDefaultCredentials = false;
-            client.EnableSsl = true;
-            client.Credentials = new NetworkCredential("subamraghu11154@gmail.com", "Raghu2k02");
-
-            MailMessage message = new MailMessage();
-            message.From = new MailAddress("subamraghu11154@gmail.com");
-            message.To.Add(new MailAddress(ToMail));
-            message.Subject = "Password Reset OTP";
-            message.Body = $"To reset your password, please use the following OTP: {otp}";
-
+            System.Net.Mail.MailMessage mailMessage = new System.Net.Mail.MailMessage();
             try
             {
-                client.Send(message);
-                Console.WriteLine("Mail sent successfully");
+                mailMessage.From = new System.Net.Mail.MailAddress("m_raghu@outlook.com", "FUNDOO NOTES");
+                mailMessage.To.Add(ToMail);
+                mailMessage.Subject = "Change password for Fundoo Notes";
+                mailMessage.Body = "This is your otp please enter to change password "+otp;
+                mailMessage.IsBodyHtml = true;
+                System.Net.Mail.SmtpClient smtpClient = new System.Net.Mail.SmtpClient("smtp-mail.outlook.com");
+
+                // Specifies how email messages are delivered. Here Email is sent through the network to an SMTP server.
+                smtpClient.DeliveryMethod = System.Net.Mail.SmtpDeliveryMethod.Network;
+
+                // Set the port for Outlook's SMTP server
+                smtpClient.Port = 587; // Outlook SMTP port for TLS/STARTTLS
+
+                // Enable SSL/TLS
+                smtpClient.EnableSsl = true;
+
+                string loginName = "m_raghu@outlook.com";
+                string loginPassword = "R@ghu2k01";
+
+                System.Net.NetworkCredential networkCredential = new System.Net.NetworkCredential(loginName, loginPassword);
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = networkCredential;
+
+                smtpClient.Send(mailMessage);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error sending mail daa: " + ex.StackTrace);
+                Console.WriteLine("Exception caught: " + ex.Message);
+            }
+            finally
+            {
+                mailMessage.Dispose();
             }
         }
     }

@@ -20,7 +20,7 @@ namespace BuisinessLayer.service.serviceImpl
         private readonly IUserRepo UserRepo;
         private static string otp;
         private static string mailid;
-
+        private static UserEntity entity;
         public UserServiceImpl(IUserRepo UserRepo)
         {
             this.UserRepo = UserRepo;
@@ -71,7 +71,15 @@ namespace BuisinessLayer.service.serviceImpl
 
         public Task<UserResponce> Login(string Email, string password)
         {
-            UserEntity entity = UserRepo.GetUserByEmail(Email).Result;
+            UserEntity entity ;
+            try
+            {
+                 entity = UserRepo.GetUserByEmail(Email).Result;
+            }
+            catch(AggregateException e)
+            {
+                throw new UserNotFoundException("UserNotFoundByEmailId");
+            }
             if(password.Equals(Decrypt(entity.UserPassword)))
             {
                 return Task.FromResult(MapToResponce(entity));
@@ -83,50 +91,66 @@ namespace BuisinessLayer.service.serviceImpl
 
         }
 
-        public string ChangePasswordRequest(string Email)
+        public Task<String> ChangePasswordRequest(string Email)
         {
-            if(UserRepo.GetUserByEmail(Email) != null)
+            try
             {
-                string generatedotp = "";
-                Random r = new Random();
-                
-                for(int i = 0;i<6;i++)
-                {
-                    generatedotp += r.Next(0, 10);
-                }
-                otp = generatedotp;
-                mailid = Email;
-                MailSenderClass.sendMail(Email,generatedotp);
-                Console.WriteLine(otp);
-                return "MailSent ✔️";
+                 entity = UserRepo.GetUserByEmail(Email).Result;
             }
-            else
+            catch (Exception e)
             {
-                throw new UserNotFoundException("UserNot Present Please Register");
+                throw new UserNotFoundException("UserNotFoundByEmailId" + e.Message);
             }
-        }
 
-        public string ChangePassword(string otp,string password)
+            string generatedotp = "";
+            Random r = new Random();
+
+            for (int i = 0; i < 6; i++)
+            {
+                generatedotp += r.Next(0, 10);
+            }
+            otp = generatedotp;
+            mailid = Email;
+            MailSenderClass.sendMail(Email, generatedotp);
+            Console.WriteLine(otp);
+           return Task.FromResult("MailSent ✔️");
+            
+        }
+            
+            
+        
+
+        public Task<string> ChangePassword(string otp,string password)
         {
-            if (Regex.IsMatch(password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*]{8,16}$"))
+            if (otp.Equals(null))
+            {
+                return Task.FromResult("Generate Otp First");
+            }
+            if (Decrypt(entity.UserPassword).Equals(password))
+            {
+                throw new PasswordMissmatchException("Dont give the existing password");
+            }
+           
+            if (Regex.IsMatch(password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,16}$"))
             {
                 if (UserServiceImpl.otp.Equals(otp))
                 {
-                   if( UserRepo.UpdatePassword(mailid,password).Result==1)
+                   if( UserRepo.UpdatePassword(mailid,Encrypt(password)).Result==1)
                     {
-                        return "password changed successfully";
+                        entity = null;otp = null;mailid = null;
+                        return Task.FromResult("password changed successfully");
                     }
                 }
                 else
                 {
-                    return "otp miss matching";
+                    return Task.FromResult("otp miss matching");
                 }
             }
             else
             {
-                return "regex is mismatching";
+                return Task.FromResult("regex is mismatching");
             }
-            return "password not changed";
+            return Task.FromResult("password not changed");
             
         }
     }

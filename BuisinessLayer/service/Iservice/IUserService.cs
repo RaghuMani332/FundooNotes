@@ -13,7 +13,7 @@ namespace BuisinessLayer.service.Iservice
     {
         public Task<int> createUser(UserRequest request);
         public Task<UserResponce> Login(String Email, String password);
-        public String ChangePasswordRequest(String Email);
-        string ChangePassword(string otp,String password);
+        public Task<String> ChangePasswordRequest(String Email);
+        Task<string> ChangePassword(string otp,String password);
     }
 }

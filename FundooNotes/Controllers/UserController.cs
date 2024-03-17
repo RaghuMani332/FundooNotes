@@ -30,16 +30,20 @@ namespace FundooNotes.Controllers
         {
             return Ok(await service.Login(Email, password)); 
         }
+
+
         [HttpPut("forgotpass/{Email}")]
-        public String ChangePasswordRequest(String Email)
+        [UserExceptionHandlerFilter]
+        public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
-            return service.ChangePasswordRequest(Email);
+            return Ok( await service.ChangePasswordRequest(Email));
         }
 
         [HttpPut("otp/{otp}/{password}")]
-        public String ChangePassword(String otp,String password)
+        [UserExceptionHandlerFilter]
+        public async Task<IActionResult> ChangePassword(String otp,String password)
         {
-            return service.ChangePassword(otp,password);
+            return Ok(await service.ChangePassword(otp,password));
         }
 
 
