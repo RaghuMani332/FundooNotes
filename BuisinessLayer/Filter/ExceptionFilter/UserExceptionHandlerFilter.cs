@@ -35,17 +35,17 @@ namespace BuisinessLayer.Filter.ExceptionFilter
                 context.ModelState.AddModelError("UserNotFound", context.Exception.Message);
                 ValidationProblemDetails problemDetails = new ValidationProblemDetails(context.ModelState);
                 problemDetails.Status = StatusCodes.Status404NotFound;
-                context.Result = new UnauthorizedObjectResult(problemDetails);
+                context.Result = new NotFoundObjectResult(problemDetails);
             }
 
 
 
             else
             {
-                context.ModelState.AddModelError("unknow exceptio contact developer", context.Exception.Message);
+                context.ModelState.AddModelError("unknow exceptio contact developer", context.Exception.Message+"  stacktrace==> "+context.Exception.StackTrace);
                 ValidationProblemDetails problemDetails = new ValidationProblemDetails(context.ModelState);
-                problemDetails.Status = StatusCodes.Status404NotFound;
-                context.Result = new UnauthorizedObjectResult(problemDetails);
+                problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
+                context.Result = new UnprocessableEntityObjectResult(problemDetails);
             }
         }
     }

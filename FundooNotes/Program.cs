@@ -1,12 +1,39 @@
 using BuisinessLayer.service.Iservice;
 using BuisinessLayer.service.serviceImpl;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//----------FOR JWT--------------
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
+    Options =>
+    {
+        Options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+//------------------------------
+
+
+
+
+
+
+
+
+
 builder.Services.AddSingleton<DapperContext>();
 builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
 builder.Services.AddScoped<IUserService,UserServiceImpl>();
