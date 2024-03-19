@@ -33,10 +33,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 
 
-
+//--------USED FOR DEPENDENCY INJECTION--------
 builder.Services.AddSingleton<DapperContext>();
 builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
 builder.Services.AddScoped<IUserService,UserServiceImpl>();
+
+builder.Services.AddScoped<INotesRepo, NotesRepoImpl>();
+builder.Services.AddScoped<INotesService,NotesServiceImpl>(); 
+
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
