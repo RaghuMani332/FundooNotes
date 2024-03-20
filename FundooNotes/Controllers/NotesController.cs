@@ -18,8 +18,21 @@ namespace FundooNotes.Controllers
         [HttpPost("/createNote")]
         public IActionResult createNotes(NotesRequest request)
         {
-            NotesService.createNotes(request);
+            
+            return Ok(NotesService.createNotes(request));
+        }
+
+        [HttpGet]
+        public IActionResult GetAllNotes(String Email)
+        {
+           return Ok( NotesService.GetAllNotes(Email));
+        }
+        [HttpPut]
+        public IActionResult UpdateNotes(NotesRequest update)
+        {
+            NotesService.UpdateNotes(update);
             return Ok();
         }
+
     }
 }

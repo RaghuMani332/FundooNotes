@@ -34,9 +34,6 @@ namespace RepositaryLayer.Repositary.RepoImpl
             IDbConnection connection = context.CreateConnection();
            
                return await connection.QueryFirstAsync<UserEntity>(Query, new { Email = email });
-            
-            
-
         }
 
         public async Task<int> UpdatePassword(string mailid, string password)
@@ -44,6 +41,33 @@ namespace RepositaryLayer.Repositary.RepoImpl
             String Query = "update User_Entity set UserPassword = @Password where UserEmail = @mail";
             IDbConnection connection= context.CreateConnection();
            return await connection.ExecuteAsync(Query,new {mail=mailid,Password=password});
+        }
+        public UserEntity GetById(int id)
+        {
+            String query = "select * from User_Entity where UserId = @Id";
+            IDbConnection connection=context.CreateConnection();
+           return connection.Query<UserEntity>(query,new {Id=id}).FirstOrDefault();
+
+        }
+
+        public async Task<List<int>> GetCollaboratorIdsByEmails(List<string> emailIds)
+        {
+            string query = "SELECT UserId FROM User_Entity WHERE UserEmail IN @EmailIds";
+            using (IDbConnection connection = context.CreateConnection())
+            {
+                var userIds = await connection.QueryAsync<int>(query, new { EmailIds = emailIds });
+                return userIds.ToList();
+            }
+        }
+
+        public async Task<List<string>> GetUserEmailsByIds(List<int> userIds)
+        {
+            string query = "SELECT UserEmail FROM User_Entity WHERE UserId IN @UserIds";
+            using (IDbConnection connection = context.CreateConnection())
+            {
+                var userEmails = await connection.QueryAsync<string>(query, new { UserIds = userIds });
+                return userEmails.ToList();
+            }
         }
     }
 }

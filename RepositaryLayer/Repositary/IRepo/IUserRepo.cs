@@ -13,5 +13,8 @@ namespace RepositaryLayer.Repositary.IRepo
       public Task<int> createUser(UserEntity entity);
        public Task<UserEntity> GetUserByEmail(string email);
         Task<int> UpdatePassword(string mailid, string password);
+        public UserEntity GetById(int id);
+        Task<List<int>> GetCollaboratorIdsByEmails(List<string> emailIds);
+        Task<List<string>> GetUserEmailsByIds(List<int> userIds);
     }
 }

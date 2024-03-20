@@ -1,4 +1,7 @@
 ﻿using CommonLayer.Models.RequestDto;
+using CommonLayer.Models.ResponceDto;
+using Microsoft.AspNetCore.Mvc;
+using RepositaryLayer.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +12,8 @@ namespace BuisinessLayer.service.Iservice
 {
     public interface INotesService
     {
-        public void createNotes(NotesRequest request);
+        public Dictionary<String, List<NotesResponce>> createNotes(NotesRequest request);
+        Dictionary<String, List<NotesResponce>> GetAllNotes(string email);
+        void UpdateNotes(NotesRequest update);
     }
 }
