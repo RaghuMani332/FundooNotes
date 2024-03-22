@@ -28,9 +28,15 @@ namespace FundooNotes.Controllers
            return Ok( NotesService.GetAllNotes(Email));
         }
         [HttpPut]
-        public IActionResult UpdateNotes(NotesRequest update)
+        public IActionResult UpdateNotes(NotesRequest update,int noteId)
         {
-            NotesService.UpdateNotes(update);
+            NotesService.UpdateNotes(update,noteId);
+            return Ok();
+        }
+        [HttpDelete]
+        public IActionResult deleteNotes(int noteId,String Email)
+        {
+            NotesService.DeleteNote(noteId, Email);
             return Ok();
         }
 

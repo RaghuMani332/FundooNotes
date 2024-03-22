@@ -13,7 +13,8 @@ namespace BuisinessLayer.service.Iservice
     public interface INotesService
     {
         public Dictionary<String, List<NotesResponce>> createNotes(NotesRequest request);
+        void DeleteNote(int noteId,String Email);
         Dictionary<String, List<NotesResponce>> GetAllNotes(string email);
-        void UpdateNotes(NotesRequest update);
+        void UpdateNotes(NotesRequest update,int NoteId);
     }
 }

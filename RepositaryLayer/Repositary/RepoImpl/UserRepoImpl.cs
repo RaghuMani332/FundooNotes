@@ -59,15 +59,15 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 return userIds.ToList();
             }
         }
-
-        public async Task<List<string>> GetUserEmailsByIds(List<int> userIds)
+        public List<string> GetUserEmailsByIds(List<int> userIds)
         {
             string query = "SELECT UserEmail FROM User_Entity WHERE UserId IN @UserIds";
             using (IDbConnection connection = context.CreateConnection())
             {
-                var userEmails = await connection.QueryAsync<string>(query, new { UserIds = userIds });
+                var userEmails =  connection.Query<string>(query, new { UserIds = userIds });
                 return userEmails.ToList();
             }
         }
+
     }
 }

@@ -15,6 +15,6 @@ namespace RepositaryLayer.Repositary.IRepo
         Task<int> UpdatePassword(string mailid, string password);
         public UserEntity GetById(int id);
         Task<List<int>> GetCollaboratorIdsByEmails(List<string> emailIds);
-        Task<List<string>> GetUserEmailsByIds(List<int> userIds);
+        public List<string> GetUserEmailsByIds(List<int> userIds);
     }
 }
