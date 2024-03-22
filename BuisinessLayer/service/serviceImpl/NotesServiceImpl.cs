@@ -37,11 +37,12 @@ namespace BuisinessLayer.service.serviceImpl
                 Remainder = request.Remainder,
                 IsArchive = request.IsArchive,
                 IsPinned = request.IsPinned,
-                IsTrash = false,
+                IsTrash = request.IsTrash,
                 CreatedAt = DateTime.Now,
                 ModifiedAt = DateTime.Now,
                 CollabId = request.CollabEmailId == null ? null : UserRepo.GetCollaboratorIdsByEmails(request.CollabEmailId).Result,
                 UserId = user.UserId
+                
             };
         }
 
@@ -62,7 +63,7 @@ namespace BuisinessLayer.service.serviceImpl
                     IsArchive = entity.IsArchive,
                     IsPinned = entity.IsPinned,
                     IsTrash = entity.IsTrash,
-                  //  CreatedAt = entity.CreatedAt,
+                    CreatedAt = entity.CreatedAt,
                     ModifiedAt = entity.ModifiedAt,
                     CollabEmailId = UserRepo.GetUserEmailsByIds(entity.CollabId),
                     UserEmailId = userEmail
@@ -74,15 +75,30 @@ namespace BuisinessLayer.service.serviceImpl
 
         public Dictionary<string, List<NotesResponce>> createNotes(NotesRequest request)
         {
+            foreach (var v in request.CollabEmailId)
+            {
+                try
+                {
+                    String s = UserRepo.GetUserByEmail(v).Result.UserEmail;
+                    if (s == null || s.Equals(""))
+                    {
+                        throw new UserNotFoundException("user not in database please add " + v);
+                    }
+                }
+                catch (AggregateException ex)
+                {
+                    throw new UserNotFoundException("user not in database please add " + v);
+
+                }
+            }
             NotesEntity entity = MapToEntity(request);
+           
             var createdNotes = NotesRepo.createNote(entity);
 
-            // Check if createdNotes is null or empty
             if (createdNotes == null || createdNotes.Count == 0)
             {
-                // Log or handle the case where no notes are created
                 Console.WriteLine("No notes created.");
-                return new Dictionary<string, List<NotesResponce>>(); // Return an empty dictionary
+                return new Dictionary<string, List<NotesResponce>> { { "own", new List<NotesResponce>() }, { "Collab", new List<NotesResponce>() } };
             }
 
             Dictionary<String, List<NotesResponce>> res = new Dictionary<string, List<NotesResponce>>();
@@ -110,18 +126,6 @@ namespace BuisinessLayer.service.serviceImpl
             {
                 d.Add(item.Key, MapToResponse(item.Value));
             }
-             Console.WriteLine("print collabed id--------------");
-            foreach (var item in d)
-            {
-                foreach (var item1 in item.Value)
-                {
-                    foreach (var item2 in item1.CollabEmailId)
-                    {
-                        Console.WriteLine(item2);
-                    }
-                }
-            }
-            Console.WriteLine("--------------------");
             return d;
         }
 
@@ -133,6 +137,22 @@ namespace BuisinessLayer.service.serviceImpl
             {
                 if (NotesRepo.GetById(noteId).UserId == UserRepo.GetUserByEmail(update.UserEmailId).Result.UserId)
                 {
+                    foreach(var v in update.CollabEmailId)
+                    {
+                        try
+                        {
+                            String s = UserRepo.GetUserByEmail(v).Result.UserEmail;
+                            if (s == null || s.Equals(""))
+                            {
+                                throw new UserNotFoundException("user not in database please add " + v);
+                            }
+                        }
+                        catch(AggregateException ex)
+                        {
+                            throw new UserNotFoundException("user not in database please add " + v);
+
+                        }
+                    }
                     NotesRepo.UpdateNotes(entity);
                 }
                 else
@@ -141,7 +161,6 @@ namespace BuisinessLayer.service.serviceImpl
                 }
             }
             else{
-
                 NotesRepo.UpdateNotes(entity);
             }
             

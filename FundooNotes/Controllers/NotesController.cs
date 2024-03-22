@@ -6,6 +6,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FundooNotes.Controllers
 {
+
+    /*unable to create note exception -->notesrepo 40
+    unable to fetch all notes ->notesrepo 90
+    "UserMissMatchException()160
+    in line 193 note service impl issue is there to solve
+    in 206,201 throw new exceptuon
+
+
+    logger,session,exception filter,lable
+
+*/
     [Route("api/[controller]")]
     [ApiController]
     public class NotesController : ControllerBase
