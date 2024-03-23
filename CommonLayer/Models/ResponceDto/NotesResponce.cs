@@ -21,5 +21,7 @@ namespace CommonLayer.Models.ResponceDto
         public DateTime ModifiedAt { get; set; }
         public List<string> CollabEmailId { get; set; } // Change the type to List<string>
         public string UserEmailId { get; set; }
+        public String LableName { get; set; }
+
     }
 }

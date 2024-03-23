@@ -23,7 +23,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             {
                 try
                 {
-                    string insertQuery = "INSERT INTO Notes_Entity (Title, Description, BgColor, ImagePath, Remainder, IsArchive, IsPinned, IsTrash, CreatedAt, ModifiedAt, UserId) VALUES (@Title, @Description, @BgColor, @ImagePath, @Remainder, @IsArchive, @IsPinned, @IsTrash, @CreatedAt, @ModifiedAt, @UserId); SELECT SCOPE_IDENTITY();";
+                    string insertQuery = "INSERT INTO Notes_Entity (Title, Description, BgColor, ImagePath, Remainder, IsArchive, IsPinned, IsTrash, CreatedAt, ModifiedAt, UserId, LableName) VALUES (@Title, @Description, @BgColor, @ImagePath, @Remainder, @IsArchive, @IsPinned, @IsTrash, @CreatedAt, @ModifiedAt, @UserId, @LableName); SELECT SCOPE_IDENTITY();";
                     int noteId = con.QuerySingle<int>(insertQuery, entity);
                     if (entity.CollabId != null && entity.CollabId.Any())
                     {

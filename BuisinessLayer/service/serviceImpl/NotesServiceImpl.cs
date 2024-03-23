@@ -41,8 +41,9 @@ namespace BuisinessLayer.service.serviceImpl
                 CreatedAt = DateTime.Now,
                 ModifiedAt = DateTime.Now,
                 CollabId = request.CollabEmailId == null ? null : UserRepo.GetCollaboratorIdsByEmails(request.CollabEmailId).Result,
-                UserId = user.UserId
-                
+                UserId = user.UserId,
+                LableName=request.LableName
+
             };
         }
 
@@ -66,7 +67,9 @@ namespace BuisinessLayer.service.serviceImpl
                     CreatedAt = entity.CreatedAt,
                     ModifiedAt = entity.ModifiedAt,
                     CollabEmailId = UserRepo.GetUserEmailsByIds(entity.CollabId),
-                    UserEmailId = userEmail
+                    UserEmailId = userEmail,
+                    LableName=entity.LableName
+
                 });
             }
             
@@ -92,7 +95,7 @@ namespace BuisinessLayer.service.serviceImpl
                 }
             }
             NotesEntity entity = MapToEntity(request);
-           
+            entity.IsTrash = false;
             var createdNotes = NotesRepo.createNote(entity);
 
             if (createdNotes == null || createdNotes.Count == 0)
