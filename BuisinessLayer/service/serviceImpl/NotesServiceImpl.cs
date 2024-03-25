@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using BuisinessLayer.CustomException;
+using BuisinessLayer.Entity;
 using BuisinessLayer.service.Iservice;
 using CommonLayer.Models.RequestDto;
 using CommonLayer.Models.ResponceDto;
+using Microsoft.Extensions.Logging;
 using RepositaryLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 
@@ -14,18 +16,30 @@ namespace BuisinessLayer.service.serviceImpl
     {
         private readonly INotesRepo NotesRepo;
         private readonly IUserRepo UserRepo;
+        private readonly ILogger<NotesServiceImpl> log;
 
-        public NotesServiceImpl(INotesRepo notesRepo, IUserRepo userRepo)
+        public NotesServiceImpl(INotesRepo notesRepo, IUserRepo userRepo,ILogger<NotesServiceImpl> log)
         {
             NotesRepo = notesRepo;
             UserRepo = userRepo;
+            this.log = log;
         }
 
         private NotesEntity MapToEntity(NotesRequest request)
         {
-            var user = UserRepo.GetUserByEmail(request.UserEmailId).Result;
+            UserEntity user = null;
+            try
+            {
+               user = UserRepo.GetUserByEmail(request.UserEmailId).Result;
+            }
+            catch (Exception ex)
+            {
+                log.LogError("user not found");
+                throw new UserNotFoundException("UserNotFound");
+            }
             if (user == null)
             {
+                log.LogError("User not found");    
                 throw new UserNotFoundException("User not found");
             }
             return new NotesEntity
@@ -85,22 +99,34 @@ namespace BuisinessLayer.service.serviceImpl
                     String s = UserRepo.GetUserByEmail(v).Result.UserEmail;
                     if (s == null || s.Equals(""))
                     {
+                        log.LogError("user not in database please add the user " + v);
                         throw new UserNotFoundException("user not in database please add " + v);
                     }
                 }
                 catch (AggregateException ex)
                 {
+                    log.LogError("user not in database please add the user "+v);
                     throw new UserNotFoundException("user not in database please add " + v);
 
                 }
             }
             NotesEntity entity = MapToEntity(request);
             entity.IsTrash = false;
-            var createdNotes = NotesRepo.createNote(entity);
+            Dictionary<string, List<NotesEntity>> createdNotes;
+            try
+            {
+                createdNotes = NotesRepo.createNote(entity);
+            }
+            catch(Exception ex) 
+            {
+                log.LogError("Error occured when creating notes");
+                throw new UnableToCreateNoteException("Error occured when creating notes");
+            }
 
             if (createdNotes == null || createdNotes.Count == 0)
             {
-                Console.WriteLine("No notes created.");
+//                Console.WriteLine("No notes created.");
+                log.LogInformation("No Notes Created");
                 return new Dictionary<string, List<NotesResponce>> { { "own", new List<NotesResponce>() }, { "Collab", new List<NotesResponce>() } };
             }
 
@@ -109,6 +135,7 @@ namespace BuisinessLayer.service.serviceImpl
             {
                 res.Add(item.Key, MapToResponse(item.Value));
             }
+            log.LogInformation("Notes Created Successfully");
             return res;
             
         }
@@ -120,19 +147,31 @@ namespace BuisinessLayer.service.serviceImpl
             var user = UserRepo.GetUserByEmail(email).Result;
             if (user == null)
             {
+                log.LogError("User Not Found "+email);
                 throw new UserNotFoundException("User not found");
             }
-            var notes = NotesRepo.GetAllNotes(user.UserId);
+            Dictionary<string, List<NotesEntity>> notes = null;
+            try
+            {
+                 notes = NotesRepo.GetAllNotes(user.UserId);
+            }
+            catch(Exception ex) 
+            {
+                
+                log.LogError("Unable to get all notes "+ ex.Message);
+                throw new UnableToFetchAllNotesException("Unable to get all notes");
+            }
 
             Dictionary<String, List<NotesResponce>> d = new Dictionary<string, List<NotesResponce>>();
             foreach (var item in notes)
             {
                 d.Add(item.Key, MapToResponse(item.Value));
             }
+            log.LogInformation("notes Sent Successfully");
             return d;
         }
 
-        public void UpdateNotes(NotesRequest update,int noteId)
+        public Dictionary<string, List<NotesResponce>> UpdateNotes(NotesRequest update,int noteId)
         { 
             var entity = MapToEntity(update);
             entity.NoteId = noteId;
@@ -147,11 +186,15 @@ namespace BuisinessLayer.service.serviceImpl
                             String s = UserRepo.GetUserByEmail(v).Result.UserEmail;
                             if (s == null || s.Equals(""))
                             {
+                                log.LogError("user not in database please add " + v);
                                 throw new UserNotFoundException("user not in database please add " + v);
                             }
                         }
                         catch(AggregateException ex)
                         {
+
+                            log.LogError("collab not in database please add " + v);
+                            Console.WriteLine("this is for collab not found");
                             throw new UserNotFoundException("user not in database please add " + v);
 
                         }
@@ -160,14 +203,18 @@ namespace BuisinessLayer.service.serviceImpl
                 }
                 else
                 {
-                    throw new Exception("UserMissMatchException()only owner can change the colabrations");
+
+                    log.LogError("only owner can change the colabrations");
+                    throw new UserMissMatchException("only owner can change the colabrations");
                 }
             }
             else{
+                
                 NotesRepo.UpdateNotes(entity);
+                log.LogInformation("Updated SuccessFully");
             }
-            
-            
+
+            return GetAllNotes(update.UserEmailId);
            
         }
         private bool CheckChanges(List<string> email1, List<string> email2)
@@ -193,21 +240,42 @@ namespace BuisinessLayer.service.serviceImpl
 
         public void DeleteNote(int noteId, String Email)
         {
-            if (NotesRepo.GetById(noteId).UserId == UserRepo.GetUserByEmail(Email).Result.UserId)//if there is no note id present im getting null pointer want to solve that
+            try
             {
-                try
+                if (NotesRepo.GetById(noteId).UserId == UserRepo.GetUserByEmail(Email).Result.UserId)//if there is no note id present im getting null pointer want to solve that
                 {
-                    NotesRepo.DeleteNotes(noteId);
+                    try
+                    {
+                        NotesRepo.DeleteNotes(noteId);
+                        log.LogInformation($"Note {noteId} deleted");
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError("This is note is unable to delete");
+                        throw new UnableToDeletNoteException("This is note is unable to delete");
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    throw ex;
+                    log.LogError("user id and note id is miss matching");
+                    throw new UserMissMatchException("user id and note id is miss matching");
                 }
             }
-            else
+            catch(NullReferenceException ex) 
             {
-                throw new Exception("UserMisssMatchingWithNote()user id and note is=d is miss matching");
+                log.LogError("Note Is Not Present By Id");
+                throw new NoteNotPresentByIdException("Note Is Not Present By Id");
             }
+        }
+
+        public void deleteLabel(string lableName)
+        {
+            if(NotesRepo.deleteLabel(lableName)==0)
+            {
+                log.LogError("Unable to Delete Note Lable");
+                throw new UnableToDeleteLabelException("Unable to Delete Note Lable");
+            }
+
         }
     }
 }

@@ -6,6 +6,7 @@ using RepositaryLayer.Context;
 using RepositaryLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 
+
 namespace RepositaryLayer.Repositary.RepoImpl
 {
     public class NotesRepoImpl : INotesRepo
@@ -38,7 +39,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 catch (Exception ex)
                 {
                     Console.WriteLine($"An error occurred while creating the note: {ex.StackTrace}");
-                    return null;
+                    throw ex;
                 }
             }
         }
@@ -72,7 +73,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                  {
                      List<NotesEntity> ownNotes = con.Query<NotesEntity>(queryForOwnNotes, new { UserId = userId }).AsList();
                      List<NotesEntity> collabNotes = con.Query<NotesEntity>(queryForCollabedNotes, new { UserId = userId }).AsList();
-                   List<int> colabedNotesDetail=con.Query<int>(queryForOwnColabrators, new { UserId = userId }).AsList();
+                     List<int> colabedNotesDetail=con.Query<int>(queryForOwnColabrators, new { UserId = userId }).AsList();
 
                     foreach (NotesEntity e in ownNotes)
                     {
@@ -84,6 +85,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                  catch (Exception ex)
                  {
                      Console.WriteLine($"An error occurred while retrieving notes: {ex.Message}");
+                    throw ex;
                  }
              }
              return dict;
@@ -136,10 +138,10 @@ namespace RepositaryLayer.Repositary.RepoImpl
         }
         public void DeleteNotes(int noteId)
         {
-            String deleteQuery = "delete from Colabrator where notesId = @id";
+           // String deleteQuery = "delete from Colabrator where notesId = @id";
             IDbConnection connection = Context.CreateConnection();
-            connection.Execute(deleteQuery, new { id = noteId });
-            string notesdelete = "delete from Notes_Entity where NoteId= @id";
+           // connection.Execute(deleteQuery, new { id = noteId });
+            string notesdelete = "update Notes_Entity set IsTrash=1 where NoteId= @id";
             connection.Execute(notesdelete, new { id=noteId});
         }
         public NotesEntity GetById(int noteId)
@@ -152,6 +154,12 @@ namespace RepositaryLayer.Repositary.RepoImpl
         {
            return Context.CreateConnection().Query<int>("Select * from colabrator where " +
                                                         "NotesId = @NoteId", new {NoteId=noteId}).ToList();
+        }
+
+        public int deleteLabel(string lableName)
+        {
+           // return Context.CreateConnection().Execute("Delete from Notes_Entity where LableName = @LableName", new { LableName = lableName });
+            return Context.CreateConnection().Execute("  update Notes_Entity set LableName =null where LableName = @LableName", new { LableName = lableName });
         }
     }
 }

@@ -3,6 +3,7 @@ using BuisinessLayer.Entity;
 using BuisinessLayer.MailSender;
 using BuisinessLayer.service.Iservice;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using RepositaryLayer.DTO.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
 using System;
@@ -11,19 +12,20 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-//using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BuisinessLayer.service.serviceImpl
 {
     public class UserServiceImpl : IUserService
     {
         private readonly IUserRepo UserRepo;
+        private readonly ILogger<UserServiceImpl> log;
         private static string otp;
         private static string mailid;
         private static UserEntity entity;
-        public UserServiceImpl(IUserRepo UserRepo)
+        public UserServiceImpl(IUserRepo UserRepo, ILogger<UserServiceImpl> log)
         {
             this.UserRepo = UserRepo;
+            this.log = log;
         }
         private UserEntity MapToEntity(UserRequest request)
         {
@@ -66,7 +68,9 @@ namespace BuisinessLayer.service.serviceImpl
 
         public Task<int> createUser(UserRequest request)
         {
-          return UserRepo.createUser(MapToEntity(request));
+            var v = UserRepo.createUser(MapToEntity(request));
+            log.LogInformation("User Created");
+            return v;
         }
 
         public Task<UserResponce> Login(string Email, string password)
@@ -78,14 +82,18 @@ namespace BuisinessLayer.service.serviceImpl
             }
             catch(AggregateException e)
             {
+                log.LogError("UserNotFoundByEmailId");
                 throw new UserNotFoundException("UserNotFoundByEmailId");
             }
             if(password.Equals(Decrypt(entity.UserPassword)))
             {
-                return Task.FromResult(MapToResponce(entity));
+                var v = Task.FromResult(MapToResponce(entity));
+                log.LogInformation("User lOGED in");
+                return v;
             }
             else
             {
+                log.LogError("Incorrect Password");
                 throw new PasswordMissmatchException("Incorrect Password");
             }
 
@@ -99,6 +107,7 @@ namespace BuisinessLayer.service.serviceImpl
             }
             catch (Exception e)
             {
+                log.LogError("UserNotFoundByEmailId");
                 throw new UserNotFoundException("UserNotFoundByEmailId" + e.Message);
             }
 
@@ -112,7 +121,8 @@ namespace BuisinessLayer.service.serviceImpl
             otp = generatedotp;
             mailid = Email;
             MailSenderClass.sendMail(Email, generatedotp);
-            Console.WriteLine(otp);
+            //            Console.WriteLine(otp);
+            log.LogInformation(otp +" OTP SENT");
            return Task.FromResult("MailSent ✔️");
             
         }
@@ -124,10 +134,12 @@ namespace BuisinessLayer.service.serviceImpl
         {
             if (otp.Equals(null))
             {
+                log.LogWarning("Generate OTP first");
                 return Task.FromResult("Generate Otp First");
             }
             if (Decrypt(entity.UserPassword).Equals(password))
             {
+                log.LogError("Dont give the existing password");
                 throw new PasswordMissmatchException("Dont give the existing password");
             }
            
@@ -138,18 +150,22 @@ namespace BuisinessLayer.service.serviceImpl
                    if( UserRepo.UpdatePassword(mailid,Encrypt(password)).Result==1)
                     {
                         entity = null;otp = null;mailid = null;
+                        log.LogInformation("password changed successfully");
                         return Task.FromResult("password changed successfully");
                     }
                 }
                 else
                 {
+                    log.LogWarning("OTP MissMatching");
                     return Task.FromResult("otp miss matching");
                 }
             }
             else
             {
+                log.LogWarning("Regex MissMatching");
                 return Task.FromResult("regex is mismatching");
             }
+            log.LogWarning("Password Not Changed");
             return Task.FromResult("password not changed");
             
         }

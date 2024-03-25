@@ -19,9 +19,10 @@ namespace CommonLayer.Models.RequestDto
         public bool IsPinned { get; set; }
         public bool IsTrash { get; set; }//(When create notes this should be false)
                                          
-        public String LableName { get; set; }
+        public String? LableName { get; set; }
 
         public List<String>? CollabEmailId { get; set; }
         public String UserEmailId { get; set; }
+        
     }
 }

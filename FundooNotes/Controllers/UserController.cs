@@ -25,26 +25,35 @@ namespace FundooNotes.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("/register")]
+        [HttpPost("/RegisterUser")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> createUser(UserRequest request)
         {
                return Ok(await service.createUser(request));
         }
 
+       
         [HttpGet("Login/{Email}/{password}")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> Login(String Email, String password)
         {
-           UserResponce Responce= await service.Login(Email, password);
-            if(Responce != null)
+            UserResponce response = await service.Login(Email, password);
+            if (response != null)
             {
                 var token = GenerateToken(Email);
+
+                Response.Cookies.Append("jwt", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict,
+                    
+                });
+
                 return Ok(token);
             }
             return Unauthorized();
-           
         }
+
 
 
 
@@ -80,7 +89,7 @@ namespace FundooNotes.Controllers
 
 
 
-        [HttpPut("forgotpass/{Email}")]
+        [HttpPut("ForgotPassword/{Email}")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
@@ -89,7 +98,7 @@ namespace FundooNotes.Controllers
 
 
 
-        [HttpPut("otp/{otp}/{password}")]
+        [HttpPut("ResetPassword/{otp}/{password}")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePassword(String otp,String password)
         {
