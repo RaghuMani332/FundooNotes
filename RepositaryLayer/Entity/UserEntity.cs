@@ -12,6 +12,6 @@ namespace BuisinessLayer.Entity
         public String UserFirstName { get; set; }
         public String UserLastName { get; set; }
         public String UserEmail { get; set; }
-        public String UserPassword { get; set; }
+        public string UserPassword { get; set; }
     }
 }

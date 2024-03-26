@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Apis.Auth" Version="1.67.0" />
+    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.67.0.3287" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="6.0.0-preview.4.21253.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
@@ -18,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Filter\ExceptionFilter\" />
+    <Folder Include="Filter\ActionFilter\" />
   </ItemGroup>
 
 </Project>
