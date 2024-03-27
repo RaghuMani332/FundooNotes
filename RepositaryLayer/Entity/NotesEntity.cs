@@ -24,7 +24,7 @@ namespace RepositaryLayer.Entity
         public DateTime ModifiedAt { get; set; }
         public List<int> CollabId { get; set; }
         public int UserId { get; set; }
-        public String? LableName {  get; set; }
+       // public String? LableName {  get; set; }
         public override string ToString()
         {
             return $"NoteId: {NoteId}, Title: {Title}, Description: {Description}, BgColor: {BgColor}, ImagePath: {ImagePath}, Remainder: {Remainder}, IsArchive: {IsArchive}, IsPinned: {IsPinned}, IsTrash: {IsTrash}, CreatedAt: {CreatedAt}, ModifiedAt: {ModifiedAt}, CollabId: {CollabId}, UserId: {UserId}";

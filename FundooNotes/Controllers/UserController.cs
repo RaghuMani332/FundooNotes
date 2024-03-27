@@ -29,7 +29,8 @@ namespace FundooNotes.Controllers
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> createUser(UserRequest request)
         {
-               return Ok(await service.createUser(request));
+            await service.createUser(request);
+               return Ok("UserCreatedSuccessfully");
         }
 
        
@@ -59,8 +60,7 @@ namespace FundooNotes.Controllers
 
         private string GenerateToken(string email)
         {
-            Console.WriteLine(_configuration);
-            Console.WriteLine(_configuration["jwt:Key"]);
+      
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

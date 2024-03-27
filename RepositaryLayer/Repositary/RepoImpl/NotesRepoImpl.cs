@@ -24,7 +24,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             {
                 try
                 {
-                    string insertQuery = "INSERT INTO Notes_Entity (Title, Description, BgColor, ImagePath, Remainder, IsArchive, IsPinned, IsTrash, CreatedAt, ModifiedAt, UserId, LableName) VALUES (@Title, @Description, @BgColor, @ImagePath, @Remainder, @IsArchive, @IsPinned, @IsTrash, @CreatedAt, @ModifiedAt, @UserId, @LableName); SELECT SCOPE_IDENTITY();";
+                    string insertQuery = "INSERT INTO Notes_Entity (Title, Description, BgColor, ImagePath, Remainder, IsArchive, IsPinned, IsTrash, CreatedAt, ModifiedAt, UserId) VALUES (@Title, @Description, @BgColor, @ImagePath, @Remainder, @IsArchive, @IsPinned, @IsTrash, @CreatedAt, @ModifiedAt, @UserId); SELECT SCOPE_IDENTITY();";
                     int noteId = con.QuerySingle<int>(insertQuery, entity);
                     if (entity.CollabId != null && entity.CollabId.Any())
                     {
@@ -147,7 +147,15 @@ namespace RepositaryLayer.Repositary.RepoImpl
         public NotesEntity GetById(int noteId)
         {
             IDbConnection con = Context.CreateConnection();
-            return con.Query<NotesEntity>("Select * from Notes_Entity where NoteId = @id", new {id=noteId}).FirstOrDefault();
+            NotesEntity e= con.Query<NotesEntity>("Select * from Notes_Entity where NoteId = @id", new {id=noteId}).FirstOrDefault();
+            e.CollabId = new List<int>();
+            String queryforCollab = " SELECT colab.userId FROM Notes_Entity notes INNER JOIN Colabrator colab ON notes.NoteId = colab.NotesId WHERE colab.NotesId=notes.NoteId And notes.NoteId=@noteId";
+            List<int> i=con.Query<int>(queryforCollab, new { noteId = noteId}).ToList();
+            foreach(int v in i)
+            {
+                e.CollabId.Add(v);
+            }
+            return e;
         }
 
         public List<int> GetUserByNotesIdInCollab(int noteId)
@@ -156,10 +164,6 @@ namespace RepositaryLayer.Repositary.RepoImpl
                                                         "NotesId = @NoteId", new {NoteId=noteId}).ToList();
         }
 
-        public int deleteLabel(string lableName)
-        {
-           // return Context.CreateConnection().Execute("Delete from Notes_Entity where LableName = @LableName", new { LableName = lableName });
-            return Context.CreateConnection().Execute("  update Notes_Entity set LableName =null where LableName = @LableName", new { LableName = lableName });
-        }
+        
     }
 }

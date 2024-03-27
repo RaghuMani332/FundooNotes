@@ -1,6 +1,7 @@
 ﻿using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using CommonLayer.Models.RequestDto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ namespace FundooNotes.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+   // [Authorize]
     public class NotesController : ControllerBase
     {
         private readonly INotesService NotesService;
@@ -28,6 +30,7 @@ namespace FundooNotes.Controllers
 
         [HttpGet("GetAllNotes")]
         [NotesExceptionFilter]
+        
         public IActionResult GetAllNotes(String Email)
         {
            return Ok( NotesService.GetAllNotes(Email));
@@ -36,7 +39,26 @@ namespace FundooNotes.Controllers
         [NotesExceptionFilter]
         public IActionResult UpdateNotes(NotesRequest update,int noteId)
         {
-           
+            //------------SAMPLE INPUT FOR THIS------- 
+            /*
+             {
+  "title": "done by collabrato 2",
+  "description": "string",
+  "bgColor": "string",
+  "imagePath": "string",
+  "remainder": "2024-03-27T13:05:23.052Z",
+  "isArchive": true,
+  "isPinned": true,
+  "isTrash": true,
+  "collabEmailId": [
+        "raghum11154@gmail.com",
+    "srikanthraghu11154@gmail.com",
+    "subamraghu11154@gmail.com"
+  ],
+  "userEmailId": "raghumani11154@gmail.com"
+}
+             */
+            // WHENEVER UPDATE REQUEST IS COMMING IT SHOULD BE CONTAIN ALL COLLABID,USERID --> colabemail we can get through the GETBYID() method
             return Ok(NotesService.UpdateNotes(update, noteId));
         }
         [HttpDelete("DeleteNotes")]
@@ -44,15 +66,13 @@ namespace FundooNotes.Controllers
         public IActionResult deleteNotes(int noteId,String Email)
         {
             NotesService.DeleteNote(noteId, Email);
-            return Ok();
+            return Ok("Deleted SuccessFully");
         }
-        [HttpDelete("DeleteLabel")]
+        [HttpGet("GetById /{noteId}")]
         [NotesExceptionFilter]
-        public IActionResult deleteLabel(String LableName)
+        public IActionResult GetByNoteId(int noteId)
         {
-            NotesService.deleteLabel(LableName);
-            return Ok();
-
+            return Ok(NotesService.GetByNoteId(noteId));
         }
 
     }
