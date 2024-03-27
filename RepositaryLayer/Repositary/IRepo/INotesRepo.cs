@@ -16,6 +16,6 @@ namespace RepositaryLayer.Repositary.IRepo
         void DeleteNotes(int noteId);
         NotesEntity GetById(int noteId);
         List<int> GetUserByNotesIdInCollab(int noteId);
-        int deleteLabel(string lableName);
+      
     }
 }

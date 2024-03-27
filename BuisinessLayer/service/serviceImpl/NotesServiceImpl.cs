@@ -56,35 +56,40 @@ namespace BuisinessLayer.service.serviceImpl
                 ModifiedAt = DateTime.Now,
                 CollabId = request.CollabEmailId == null ? null : UserRepo.GetCollaboratorIdsByEmails(request.CollabEmailId).Result,
                 UserId = user.UserId,
-                LableName=request.LableName
-
-            };
+                           };
         }
 
         private List<NotesResponce> MapToResponse(List<NotesEntity> entities)
         {
             var response = new List<NotesResponce>();
-            foreach (var entity in entities)
+            try
             {
-                var userEmail = UserRepo.GetById(entity.UserId).UserEmail;
-                response.Add(new NotesResponce
+                foreach (var entity in entities)
                 {
-                    NoteId = entity.NoteId,
-                    Title = entity.Title,
-                    Description = entity.Description,
-                    BgColor = entity.BgColor,
-                    ImagePath = entity.ImagePath,
-                    Remainder = entity.Remainder,
-                    IsArchive = entity.IsArchive,
-                    IsPinned = entity.IsPinned,
-                    IsTrash = entity.IsTrash,
-                    CreatedAt = entity.CreatedAt,
-                    ModifiedAt = entity.ModifiedAt,
-                    CollabEmailId = UserRepo.GetUserEmailsByIds(entity.CollabId),
-                    UserEmailId = userEmail,
-                    LableName=entity.LableName
+                    var userEmail = UserRepo.GetById(entity.UserId).UserEmail;
+                    response.Add(new NotesResponce
+                    {
+                        NoteId = entity.NoteId,
+                        Title = entity.Title,
+                        Description = entity.Description,
+                        BgColor = entity.BgColor,
+                        ImagePath = entity.ImagePath,
+                        Remainder = entity.Remainder,
+                        IsArchive = entity.IsArchive,
+                        IsPinned = entity.IsPinned,
+                        IsTrash = entity.IsTrash,
+                        CreatedAt = entity.CreatedAt,
+                        ModifiedAt = entity.ModifiedAt,
+                        CollabEmailId = UserRepo.GetUserEmailsByIds(entity.CollabId),
+                        UserEmailId = userEmail,
 
-                });
+
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
             }
             
             return response;
@@ -209,9 +214,8 @@ namespace BuisinessLayer.service.serviceImpl
                 }
             }
             else{
-                
-                NotesRepo.UpdateNotes(entity);
-                log.LogInformation("Updated SuccessFully");
+
+                throw new Exception("CollabId MissMathing");
             }
 
             return GetAllNotes(update.UserEmailId);
@@ -221,14 +225,17 @@ namespace BuisinessLayer.service.serviceImpl
         {
             if (email1 == null && email2 == null)
             {
+                Console.WriteLine("if 1");
                 return true;
             }
             else if (!email1.Any() && !email1.Any())
             {
+                Console.WriteLine("if 2");
                 return true;
             }
             else if (email1 == null || email2 == null || email1.Count != email2.Count || !email1.Any() || !email2.Any() )
             {
+                Console.WriteLine("if 3");
                 return false;
             }
 
@@ -268,14 +275,17 @@ namespace BuisinessLayer.service.serviceImpl
             }
         }
 
-        public void deleteLabel(string lableName)
+        public NotesResponce GetByNoteId(int noteId)
         {
-            if(NotesRepo.deleteLabel(lableName)==0)
+            try
             {
-                log.LogError("Unable to Delete Note Lable");
-                throw new UnableToDeleteLabelException("Unable to Delete Note Lable");
+                return MapToResponse(new List<NotesEntity>() { NotesRepo.GetById(noteId) }).FirstOrDefault();
             }
-
+            catch(NullReferenceException ex)
+            {
+                throw new NoteNotPresentByIdException("Note is not present by the given id");
+            }
+           
         }
     }
 }

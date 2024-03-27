@@ -13,9 +13,9 @@ namespace BuisinessLayer.service.Iservice
     public interface INotesService
     {
         public Dictionary<String, List<NotesResponce>> createNotes(NotesRequest request);
-        void deleteLabel(string lableName);
         void DeleteNote(int noteId,String Email);
         Dictionary<String, List<NotesResponce>> GetAllNotes(string email);
+        NotesResponce GetByNoteId(int noteId);
         public Dictionary<string, List<NotesResponce>> UpdateNotes(NotesRequest update, int noteId);
 
 
