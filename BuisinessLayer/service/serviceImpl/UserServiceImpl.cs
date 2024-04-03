@@ -33,26 +33,18 @@ namespace BuisinessLayer.service.serviceImpl
                                    UserLastName=request.LastName,
                                    UserEmail=request.Email,
                                    UserPassword=Encrypt(request.Password)
-            
             };
         }
         private String Encrypt(String password)
         {
-
-            
-           
             byte[] passByte = Encoding.UTF8.GetBytes(password);
             return Convert.ToBase64String(passByte);
-
         }
         private String Decrypt(String encryptedPass)
         {
-           
             byte[] passbyte=Convert.FromBase64String(encryptedPass);
-            String res= Encoding.UTF8.GetString(passbyte);
-           
+            String res= Encoding.UTF8.GetString(passbyte);       
             return res;
-
         }
         private UserResponce MapToResponce(UserEntity responce)
         {
@@ -61,8 +53,6 @@ namespace BuisinessLayer.service.serviceImpl
                FirstName= responce.UserFirstName,
                LastName= responce.UserLastName ,
                Email = responce.UserEmail,
-               
-
             };
         }
 
@@ -132,7 +122,7 @@ namespace BuisinessLayer.service.serviceImpl
 
         public Task<string> ChangePassword(string otp,string password)
         {
-            if (otp.Equals(null))
+            if (UserServiceImpl.otp==null)
             {
                 log.LogWarning("Generate OTP first");
                 return Task.FromResult("Generate Otp First");

@@ -64,8 +64,9 @@ app.Run();
 
 
 
- using BuisinessLayer.service.Iservice;
+using BuisinessLayer.service.Iservice;
 using BuisinessLayer.service.serviceImpl;
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
@@ -98,6 +99,33 @@ builder.Services.AddScoped<ILableService, LableServiceImpl>();
 //-----------LOGGER--------
 builder.Services.AddScoped<ILogger<UserServiceImpl>, Logger<UserServiceImpl>>();
 builder.Services.AddScoped<ILogger<NotesServiceImpl>, Logger<NotesServiceImpl>>();
+
+
+//---------KAFKA--------------
+// Register the ApacheKafkaPRODUCERService as a singleton hosted service
+builder.Services.AddSingleton<IProducer<string, string>>(sp =>
+{
+    var producerConfig = new ProducerConfig
+    {
+        BootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
+    };
+    return new ProducerBuilder<string, string>(producerConfig).Build();
+});
+// Register the ApacheKafkaCONSUMERService as a singleton hosted service
+builder.Services.AddSingleton<IConsumer<string, string>>(sp =>
+
+{
+    var consumer = new ConsumerBuilder<String, String>(new ConsumerConfig
+    {
+        BootstrapServers = builder.Configuration["Kafka:BootstrapServers"],
+        GroupId = builder.Configuration["Kafka:ConsumerGroupId"]
+
+    }).Build();
+    consumer.Subscribe(builder.Configuration["Kafka:Topic"]);
+
+    return consumer;
+}
+);
 
 
 //--------session-----------
@@ -139,6 +167,14 @@ builder.Services.AddSwaggerGen(c =>
                 });
 });
 builder.Services.AddDistributedMemoryCache();
+
+//------------redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "127.0.0.1:6379"; // Redis server address
+    options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
+});
+
 
 //jwt
 // Add JWT authentication

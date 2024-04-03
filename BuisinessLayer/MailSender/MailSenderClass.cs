@@ -47,7 +47,7 @@ namespace BuisinessLayer.MailSender
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception caught: " + ex.Message);
+                Console.WriteLine("Exception caught: " + ex.StackTrace);
             }
             finally
             {
