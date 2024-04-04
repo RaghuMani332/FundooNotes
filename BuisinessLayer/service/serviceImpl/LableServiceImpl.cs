@@ -2,13 +2,20 @@
 using BuisinessLayer.service.Iservice;
 using CommonLayer.Models.RequestDto;
 using CommonLayer.Models.ResponceDto;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.IdentityModel.Tokens;
 using RepositaryLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using StackExchange.Redis;
+using System.Linq;
+
+
 
 namespace BuisinessLayer.service.serviceImpl
 {
@@ -17,31 +24,34 @@ namespace BuisinessLayer.service.serviceImpl
         private ILableRepo lableRepo;
         private INotesRepo notesRepo;
         private IUserRepo userRepo;
+        private readonly IDistributedCache cache;
 
-        public LableServiceImpl(ILableRepo lableRepo, INotesRepo notesRepo, IUserRepo userRepo)
+        public LableServiceImpl(ILableRepo lableRepo, INotesRepo notesRepo, IUserRepo userRepo, IDistributedCache cache)
         {
             this.lableRepo = lableRepo;
             this.notesRepo = notesRepo;
             this.userRepo = userRepo;
+            this.cache = cache;
+            
         }
 
         public LableResponce CreateLable(LableRequest request)
         {
-            int uId=userRepo.GetUserByEmail(request.UserEmail).Result.UserId;
+            int uId = userRepo.GetUserByEmail(request.UserEmail).Result.UserId;
 
-            if(request.NoteId>0)
+            if (request.NoteId > 0)
             {
-                if(notesRepo.GetById(request.NoteId)!=null)
+                if (notesRepo.GetById(request.NoteId) != null)
                 {
 
-                    return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId),true));
+                    return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), true));
                 }
                 else
                 {
                     throw new Exception("Lable Not Created Because The Given NoteId is invalid");
                 }
             }
-            return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId),false));
+            return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), false));
 
         }
 
@@ -54,43 +64,72 @@ namespace BuisinessLayer.service.serviceImpl
 
         public LableResponce GetByLableId(int lableId)
         {
-            try
-            {
-                return MapToResponce(lableRepo.getLabelById(lableId));
+            String CacheKey = "Lable_" + lableId;
+            if (lableId <= 0)
+                throw new LableNotFoundException("INVALID LABLE ID");
 
-            }
-            catch (NullReferenceException e) 
+            if (GetCache<LableResponce>(CacheKey) == null)
             {
-                throw new LableNotFoundException("Lable Not Found For Given Id");
+                Console.WriteLine("from db");
+                SetCache(CacheKey, MapToResponce(lableRepo.getLabelById(lableId)));
             }
+
+            Console.WriteLine("from cache");
+            return GetCache<LableResponce>(CacheKey);
+            //  return JsonSerializer.Deserialize<LableResponce>(cache.GetString(CacheKey));
+
+
         }
 
         public List<LableResponce> GetLableByEmail(string userEmail)
         {
-            List<LableResponce> res =new List<LableResponce> ();
-            try
+
+            String cacheKey = "GetLableByEmail";
+            if (GetCache<List<LableResponce>>(cacheKey) == null)
             {
-                foreach (LableEntity e in lableRepo.GetLableByEmail(userRepo.GetUserByEmail(userEmail).Result.UserId))
+                List<LableResponce> res = new List<LableResponce>();
+                try
                 {
-                    res.Add(MapToResponce(e));
+                    foreach (LableEntity e in lableRepo.GetLableByEmail(userRepo.GetUserByEmail(userEmail).Result.UserId))
+                    {
+                        res.Add(MapToResponce(e));
+                    }
                 }
+                catch (NullReferenceException e)
+                {
+                    throw new LableNotFoundException("Lable Not Found For Given EmailId");
+                }
+                // return res;
+                SetCache(cacheKey, res);
             }
-            catch (NullReferenceException e)
-            {
-                throw new LableNotFoundException("Lable Not Found For Given EmailId");
-            }
-            return res;
+            return GetCache<List<LableResponce>>(cacheKey);
+            /* List<LableResponce> res =new List<LableResponce> ();
+             try
+             {
+                 foreach (LableEntity e in lableRepo.GetLableByEmail(userRepo.GetUserByEmail(userEmail).Result.UserId))
+                 {
+                     res.Add(MapToResponce(e));
+                 }
+             }
+             catch (NullReferenceException e)
+             {
+                 throw new LableNotFoundException("Lable Not Found For Given EmailId");
+             }
+             return res;*/
         }
 
         public LableResponce UpdateLable(LableRequest request)
         {
-            
-           return MapToResponce(lableRepo.UpdateLable(MapToEntity(request,userRepo.GetUserByEmail(request.UserEmail).Result.UserId),request.NoteId>0?true:false));
+            if (request.LableId <= 0)
+                throw new LableNotFoundException("Invalid Lable Id");
+
+            ClearCache();
+            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request, userRepo.GetUserByEmail(request.UserEmail).Result.UserId), request.NoteId > 0 ? true : false));
         }
 
-        private LableEntity MapToEntity(LableRequest request,int Uid)
+        private LableEntity MapToEntity(LableRequest request, int Uid)
         {
-            return new LableEntity { LabelName = request.LabelName, NoteId = request.NoteId, UserId=Uid, LabelId=request.LableId };
+            return new LableEntity { LabelName = request.LabelName, NoteId = request.NoteId, UserId = Uid, LabelId = request.LableId };
         }
 
         private LableResponce MapToResponce(LableEntity entity)
@@ -100,11 +139,59 @@ namespace BuisinessLayer.service.serviceImpl
                 return new LableResponce { LabelName = entity.LabelName, NoteId = entity.NoteId, UserEmail = userRepo.GetUserEmailsByIds(new List<int> { entity.UserId }).FirstOrDefault(), LabelId = entity.LabelId };
 
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
         }
+        private bool SetCache(String CacheKey, Object obj)
+        {
+            Console.WriteLine("set cache");
+            String cacheObj = cache.GetString(CacheKey);
+            Console.WriteLine("cache key ->" + CacheKey);
+            if (cacheObj.IsNullOrEmpty())
+            {
+                cache.SetString(CacheKey,
+                                JsonSerializer.Serialize(obj),
+                                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private T GetCache<T>(String CacheKey)
+        {
+            Console.WriteLine("get cache");
+            String cacheObj = cache.GetString(CacheKey);
+            if (cacheObj.IsNullOrEmpty())
+            {
+                return default;
+            }
+            return JsonSerializer.Deserialize<T>(cache.GetString(CacheKey));
+        }
+
+        public void ClearCache()
+        {
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("127.0.0.1:6379");
+            IDatabase db=redis.GetDatabase();
+            var keys=redis.GetServer("127.0.0.1:6379").Keys();
+            foreach (var key in keys)
+            {
+                Console.WriteLine("key to delete "+key);
+                db.KeyDelete(key);
+            }
+
+           
+        }
+
+
 
     }
+
+
+
 }
+
