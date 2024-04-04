@@ -16,6 +16,7 @@ using StackExchange.Redis;
 using System.Linq;
 
 
+
 namespace BuisinessLayer.service.serviceImpl
 {
     public class LableServiceImpl : ILableService
@@ -30,26 +31,27 @@ namespace BuisinessLayer.service.serviceImpl
             this.lableRepo = lableRepo;
             this.notesRepo = notesRepo;
             this.userRepo = userRepo;
-            this.cache=cache;
+            this.cache = cache;
+            
         }
 
         public LableResponce CreateLable(LableRequest request)
         {
-            int uId=userRepo.GetUserByEmail(request.UserEmail).Result.UserId;
+            int uId = userRepo.GetUserByEmail(request.UserEmail).Result.UserId;
 
-            if(request.NoteId>0)
+            if (request.NoteId > 0)
             {
-                if(notesRepo.GetById(request.NoteId)!=null)
+                if (notesRepo.GetById(request.NoteId) != null)
                 {
 
-                    return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId),true));
+                    return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), true));
                 }
                 else
                 {
                     throw new Exception("Lable Not Created Because The Given NoteId is invalid");
                 }
             }
-            return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId),false));
+            return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), false));
 
         }
 
@@ -65,24 +67,25 @@ namespace BuisinessLayer.service.serviceImpl
             String CacheKey = "Lable_" + lableId;
             if (lableId <= 0)
                 throw new LableNotFoundException("INVALID LABLE ID");
-            
-           if(GetCache<LableResponce>(CacheKey)==null)
+
+            if (GetCache<LableResponce>(CacheKey) == null)
             {
                 Console.WriteLine("from db");
                 SetCache(CacheKey, MapToResponce(lableRepo.getLabelById(lableId)));
             }
 
-                Console.WriteLine("from cache");
-                 return GetCache<LableResponce>(CacheKey);
-          //  return JsonSerializer.Deserialize<LableResponce>(cache.GetString(CacheKey));
+            Console.WriteLine("from cache");
+            return GetCache<LableResponce>(CacheKey);
+            //  return JsonSerializer.Deserialize<LableResponce>(cache.GetString(CacheKey));
 
 
         }
 
         public List<LableResponce> GetLableByEmail(string userEmail)
         {
+
             String cacheKey = "GetLableByEmail";
-            if(GetCache<List<LableResponce>>(cacheKey)==null)
+            if (GetCache<List<LableResponce>>(cacheKey) == null)
             {
                 List<LableResponce> res = new List<LableResponce>();
                 try
@@ -96,37 +99,37 @@ namespace BuisinessLayer.service.serviceImpl
                 {
                     throw new LableNotFoundException("Lable Not Found For Given EmailId");
                 }
-               // return res;
+                // return res;
                 SetCache(cacheKey, res);
             }
             return GetCache<List<LableResponce>>(cacheKey);
-           /* List<LableResponce> res =new List<LableResponce> ();
-            try
-            {
-                foreach (LableEntity e in lableRepo.GetLableByEmail(userRepo.GetUserByEmail(userEmail).Result.UserId))
-                {
-                    res.Add(MapToResponce(e));
-                }
-            }
-            catch (NullReferenceException e)
-            {
-                throw new LableNotFoundException("Lable Not Found For Given EmailId");
-            }
-            return res;*/
+            /* List<LableResponce> res =new List<LableResponce> ();
+             try
+             {
+                 foreach (LableEntity e in lableRepo.GetLableByEmail(userRepo.GetUserByEmail(userEmail).Result.UserId))
+                 {
+                     res.Add(MapToResponce(e));
+                 }
+             }
+             catch (NullReferenceException e)
+             {
+                 throw new LableNotFoundException("Lable Not Found For Given EmailId");
+             }
+             return res;*/
         }
 
         public LableResponce UpdateLable(LableRequest request)
         {
-            if(request.LableId<=0)
+            if (request.LableId <= 0)
                 throw new LableNotFoundException("Invalid Lable Id");
 
             ClearCache();
-            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request,userRepo.GetUserByEmail(request.UserEmail).Result.UserId),request.NoteId>0?true:false));
+            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request, userRepo.GetUserByEmail(request.UserEmail).Result.UserId), request.NoteId > 0 ? true : false));
         }
 
-        private LableEntity MapToEntity(LableRequest request,int Uid)
+        private LableEntity MapToEntity(LableRequest request, int Uid)
         {
-            return new LableEntity { LabelName = request.LabelName, NoteId = request.NoteId, UserId=Uid, LabelId=request.LableId };
+            return new LableEntity { LabelName = request.LabelName, NoteId = request.NoteId, UserId = Uid, LabelId = request.LableId };
         }
 
         private LableResponce MapToResponce(LableEntity entity)
@@ -136,15 +139,16 @@ namespace BuisinessLayer.service.serviceImpl
                 return new LableResponce { LabelName = entity.LabelName, NoteId = entity.NoteId, UserEmail = userRepo.GetUserEmailsByIds(new List<int> { entity.UserId }).FirstOrDefault(), LabelId = entity.LabelId };
 
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
         }
-        private bool SetCache(String CacheKey,Object obj)
+        private bool SetCache(String CacheKey, Object obj)
         {
             Console.WriteLine("set cache");
             String cacheObj = cache.GetString(CacheKey);
+            Console.WriteLine("cache key ->" + CacheKey);
             if (cacheObj.IsNullOrEmpty())
             {
                 cache.SetString(CacheKey,
@@ -162,49 +166,32 @@ namespace BuisinessLayer.service.serviceImpl
         {
             Console.WriteLine("get cache");
             String cacheObj = cache.GetString(CacheKey);
-           if(cacheObj.IsNullOrEmpty())
+            if (cacheObj.IsNullOrEmpty())
             {
                 return default;
             }
             return JsonSerializer.Deserialize<T>(cache.GetString(CacheKey));
         }
 
-        public void ClearCache()//it is not deleting in cache memory want to fix the bug
+        public void ClearCache()
         {
-            // Get all keys from the cache
-            var allKeys = GetAllKeys();
-           
-            // Remove each key from the cache
-            foreach (var key in allKeys)
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("127.0.0.1:6379");
+            IDatabase db=redis.GetDatabase();
+            var keys=redis.GetServer("127.0.0.1:6379").Keys();
+            foreach (var key in keys)
             {
-                Console.WriteLine("key->"+key);
-               bool b= SetCache(key,null);
-                Console.WriteLine(b);
-                Console.WriteLine(GetCache<Object>(key));
+                Console.WriteLine("key to delete "+key);
+                db.KeyDelete(key);
             }
+
+           
         }
-
-        /*private IEnumerable<string> GetAllKeys()
-        {
-            // Get all keys from the cache using the available method based on your cache provider
-            // For example, if you're using StackExchange.Redis:
-            var endPoint = cache.GetType().GetProperty("EndPoint").GetValue(cache);
-            var server = cache.GetType().GetMethod("GetServer").Invoke(cache, new[] { endPoint });
-            var keys = server.GetType().GetMethod("Keys").Invoke(server, new object[] { "*" });
-            return ((IEnumerable<object>)keys).Select(k => (string)k);
-            
-        }*/
-        private IEnumerable<string> GetAllKeys()
-        {
-            var multiplexer = ConnectionMultiplexer.Connect("127.0.0.1:6379"); // Connect to Redis
-            var server = multiplexer.GetServer("127.0.0.1", 6379); // Get server
-            var keys = server.Keys(); // Retrieve keys
-            return keys.Select(k => (string)k);
-        }
-
-
 
 
 
     }
+
+
+
 }
+
