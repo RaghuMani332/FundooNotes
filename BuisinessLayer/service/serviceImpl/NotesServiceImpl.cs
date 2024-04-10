@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BuisinessLayer.CustomException;
+﻿using BuisinessLayer.CustomException;
 using BuisinessLayer.Entity;
 using BuisinessLayer.service.Iservice;
 using CommonLayer.Models.RequestDto;

@@ -2,16 +2,11 @@
 using BuisinessLayer.Entity;
 using BuisinessLayer.MailSender;
 using BuisinessLayer.service.Iservice;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RepositaryLayer.DTO.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace BuisinessLayer.service.serviceImpl
 {

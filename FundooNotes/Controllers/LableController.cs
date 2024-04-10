@@ -1,7 +1,6 @@
 ﻿using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using CommonLayer.Models.RequestDto;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FundooNotes.Controllers
@@ -34,12 +33,12 @@ namespace FundooNotes.Controllers
         {
             return Ok(service.GetByLableId(LableId));
         }
-        [HttpPost("UpdateLable")]
+        [HttpPut("UpdateLable")]
         public IActionResult UpdateLable(LableRequest request)
         {
-            return Ok(service.UpdateLable(request));
+            return Ok(service.UpdateLable(request)); 
         }
-        [HttpPost("DeleteLable")]
+        [HttpDelete("DeleteLableByName")]
         public IActionResult DeleteLable(String UserEmail,String LableName)
         {
             return Ok(service.DeleteLable(LableName, UserEmail));

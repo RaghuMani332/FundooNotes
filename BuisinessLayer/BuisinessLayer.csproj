@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommonLayer\CommonLayer.csproj" />
+    <ProjectReference Include="..\CommonLayer\ModelLayer.csproj" />
     <ProjectReference Include="..\RepositaryLayer\RepositaryLayer.csproj" />
   </ItemGroup>
 

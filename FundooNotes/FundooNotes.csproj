@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BuisinessLayer\BuisinessLayer.csproj" />
-    <ProjectReference Include="..\CommonLayer\CommonLayer.csproj" />
+    <ProjectReference Include="..\CommonLayer\ModelLayer.csproj" />
     <ProjectReference Include="..\RepositaryLayer\RepositaryLayer.csproj" />
   </ItemGroup>
 
