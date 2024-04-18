@@ -1,8 +1,6 @@
 ﻿using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using Confluent.Kafka;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RepositaryLayer.DTO.RequestDto;
@@ -14,9 +12,9 @@ namespace FundooNotes.Controllers
 {
     [Route("api/[controller]/")]
     [ApiController]
+    [UserExceptionHandlerFilter]
     public class UserController : ControllerBase
     {
-       
         private readonly IUserService service;
         private readonly IConfiguration _configuration;
         private readonly IProducer<string, string> _kafkaProducer;
@@ -31,7 +29,7 @@ namespace FundooNotes.Controllers
             Task.Run(() => ConsumeKafkaMessages(new CancellationTokenSource().Token));
         }
 
-        [HttpPost("/RegisterUser")]
+        [HttpPost]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> createUser(UserRequest request)
         {
@@ -68,7 +66,7 @@ namespace FundooNotes.Controllers
             }
         }
        
-        [HttpGet("Login/{Email}/{password}")]
+        [HttpGet("{Email}/{password}")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> Login(String Email, String password)
         {
@@ -88,10 +86,6 @@ namespace FundooNotes.Controllers
             }
             return Unauthorized();
         }
-
-
-
-
         private string GenerateToken(string email)
         {
       
@@ -113,33 +107,18 @@ namespace FundooNotes.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-
-
-
-
-
-
-
-
-
-
-        [HttpPut("ForgotPassword/{Email}")]
+        [HttpPut("{Email}")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
             return Ok( await service.ChangePasswordRequest(Email));
         }
 
-
-
-        [HttpPut("ResetPassword/{otp}/{password}")]
-        [UserExceptionHandlerFilter]
+        [HttpPut("{otp}/{password}")]
+       
         public async Task<IActionResult> ChangePassword(String otp,String password)
         {
             return Ok(await service.ChangePassword(otp,password));
         }
-
-
-
     }
 }

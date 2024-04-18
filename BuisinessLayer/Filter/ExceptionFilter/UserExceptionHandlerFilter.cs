@@ -42,7 +42,7 @@ namespace BuisinessLayer.Filter.ExceptionFilter
 
             else
             {
-                context.ModelState.AddModelError("unknown exception contact developer", context.Exception.Message+"  stacktrace==> "+context.Exception.StackTrace);
+                context.ModelState.AddModelError("unknown exception", context.Exception.Message+"  stacktrace==> "+context.Exception.StackTrace);
                 ValidationProblemDetails problemDetails = new ValidationProblemDetails(context.ModelState);
                 problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
                 context.Result = new UnprocessableEntityObjectResult(problemDetails);

@@ -65,7 +65,7 @@ namespace BuisinessLayer.Filter.ExceptionFilter
             }
            else 
             {
-                context.ModelState.AddModelError("unknown exception in notes contact developer", context.Exception.Message + "  stacktrace==> " + context.Exception.StackTrace);
+                context.ModelState.AddModelError("unknown exception in notes ", context.Exception.Message + "  stacktrace==> " + context.Exception.StackTrace);
                 ValidationProblemDetails problemDetails = new ValidationProblemDetails(context.ModelState);
                 problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
                 context.Result = new UnprocessableEntityObjectResult(problemDetails);

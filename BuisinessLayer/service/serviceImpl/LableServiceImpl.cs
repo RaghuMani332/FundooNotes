@@ -6,16 +6,9 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using RepositaryLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using StackExchange.Redis;
-using System.Linq;
-
-
 
 namespace BuisinessLayer.service.serviceImpl
 {
@@ -32,34 +25,38 @@ namespace BuisinessLayer.service.serviceImpl
             this.notesRepo = notesRepo;
             this.userRepo = userRepo;
             this.cache = cache;
-            
         }
 
         public LableResponce CreateLable(LableRequest request)
         {
+            ClearCache();
+            LableResponce responce = new LableResponce();
             int uId = userRepo.GetUserByEmail(request.UserEmail).Result.UserId;
-
-            if (request.NoteId > 0)
+            foreach (var item in request.NoteId)
             {
-                if (notesRepo.GetById(request.NoteId) != null)
+                if ( item> 0)
                 {
-
-                    return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), true));
-                }
-                else
-                {
-                    throw new Exception("Lable Not Created Because The Given NoteId is invalid");
+                    
+                        if (notesRepo.GetById(item) != null)
+                        {
+                            return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), true));
+                        }
+                        else
+                        {
+                            throw new Exception("Lable Not Created Because The Given NoteId is invalid");
+                        }
+                    
                 }
             }
             return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), false));
-
         }
 
         public string? DeleteLable(string lableName, string userEmail)
         {
+            ClearCache();
             if (lableRepo.DeleteLable(lableName, userRepo.GetUserByEmail(userEmail).Result.UserId) == 1)
                 return "Deleted Successfully";
-            else return "Lable NotDeketed";
+            else return "Lable Not Deleted";
         }
 
         public LableResponce GetByLableId(int lableId)
@@ -67,23 +64,18 @@ namespace BuisinessLayer.service.serviceImpl
             String CacheKey = "Lable_" + lableId;
             if (lableId <= 0)
                 throw new LableNotFoundException("INVALID LABLE ID");
-
             if (GetCache<LableResponce>(CacheKey) == null)
             {
-                Console.WriteLine("from db");
+              //  Console.WriteLine("from db");
                 SetCache(CacheKey, MapToResponce(lableRepo.getLabelById(lableId)));
             }
-
-            Console.WriteLine("from cache");
+            //Console.WriteLine("from cache");
             return GetCache<LableResponce>(CacheKey);
             //  return JsonSerializer.Deserialize<LableResponce>(cache.GetString(CacheKey));
-
-
         }
 
         public List<LableResponce> GetLableByEmail(string userEmail)
         {
-
             String cacheKey = "GetLableByEmail";
             if (GetCache<List<LableResponce>>(cacheKey) == null)
             {
@@ -121,10 +113,11 @@ namespace BuisinessLayer.service.serviceImpl
         public LableResponce UpdateLable(LableRequest request)
         {
             if (request.LableId <= 0)
+            {
                 throw new LableNotFoundException("Invalid Lable Id");
-
+            }
             ClearCache();
-            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request, userRepo.GetUserByEmail(request.UserEmail).Result.UserId), request.NoteId > 0 ? true : false));
+            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request, userRepo.GetUserByEmail(request.UserEmail).Result.UserId), request.NoteId.Any(e=> e>0)  ? true : false));
         }
 
         private LableEntity MapToEntity(LableRequest request, int Uid)
@@ -173,7 +166,7 @@ namespace BuisinessLayer.service.serviceImpl
             return JsonSerializer.Deserialize<T>(cache.GetString(CacheKey));
         }
 
-        public void ClearCache()
+        private void ClearCache()
         {
             ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("127.0.0.1:6379");
             IDatabase db=redis.GetDatabase();
@@ -183,15 +176,6 @@ namespace BuisinessLayer.service.serviceImpl
                 Console.WriteLine("key to delete "+key);
                 db.KeyDelete(key);
             }
-
-           
         }
-
-
-
     }
-
-
-
 }
-

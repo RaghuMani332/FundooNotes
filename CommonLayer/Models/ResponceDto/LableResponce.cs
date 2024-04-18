@@ -10,7 +10,7 @@ namespace CommonLayer.Models.ResponceDto
     {
         public int LabelId { get; set; }
         public String LabelName { get; set; }
-        public int NoteId { get; set; }
+        public List<int> NoteId { get; set; }
         public String UserEmail { get; set; }
     }
 }

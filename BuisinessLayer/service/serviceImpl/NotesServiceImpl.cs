@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BuisinessLayer.CustomException;
+﻿using BuisinessLayer.CustomException;
 using BuisinessLayer.Entity;
 using BuisinessLayer.service.Iservice;
 using CommonLayer.Models.RequestDto;
@@ -104,6 +101,7 @@ namespace BuisinessLayer.service.serviceImpl
                     String s = UserRepo.GetUserByEmail(v).Result.UserEmail;
                     if (s == null || s.Equals(""))
                     {
+                        
                         log.LogError("user not in database please add the user " + v);
                         throw new UserNotFoundException("user not in database please add " + v);
                     }
@@ -226,12 +224,12 @@ namespace BuisinessLayer.service.serviceImpl
             if (email1 == null && email2 == null)
             {
                 Console.WriteLine("if 1");
-                return true;
+                return false;
             }
             else if (!email1.Any() && !email1.Any())
             {
                 Console.WriteLine("if 2");
-                return true;
+                return false;
             }
             else if (email1 == null || email2 == null || email1.Count != email2.Count || !email1.Any() || !email2.Any() )
             {
