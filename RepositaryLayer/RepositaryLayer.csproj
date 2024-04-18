@@ -13,4 +13,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0-preview.2.24128.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CommonLayer\ModelLayer.csproj" />
+  </ItemGroup>
+
 </Project>

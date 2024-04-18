@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace CommonLayer.Models.RequestDto
@@ -22,7 +23,9 @@ namespace CommonLayer.Models.RequestDto
         //public String? LableName { get; set; }
 
         public List<String>? CollabEmailId { get; set; }
-        public String UserEmailId { get; set; }
+
+        [JsonIgnore]
+        public String? UserEmailId { get; set; }
         
     }
 }

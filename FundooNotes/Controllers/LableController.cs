@@ -1,12 +1,18 @@
-﻿using BuisinessLayer.Filter.ExceptionFilter;
+﻿using Azure.Core;
+using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
+using CommonLayer.Models;
 using CommonLayer.Models.RequestDto;
+using CommonLayer.Models.ResponceDto;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FundooNotes.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [LableExceptionFilter]
+
     public class LableController : ControllerBase
     {
         private readonly ILableService service;
@@ -17,31 +23,38 @@ namespace FundooNotes.Controllers
         }
 
 
-        [HttpPost("CreateLable")]
-        public IActionResult CreateLable(LableRequest request)
+        [HttpPost]
+        public ResponceStructure<LableResponce> CreateLable(LableRequest request)
         {
-            return Ok(service.CreateLable(request));
+            request.UserEmail = User.FindFirstValue(ClaimTypes.Email);
+            //request.UserEmail = "raghum11154@gmail.com";
+          //  return Ok(service.CreateLable(request));
+            return new ResponceStructure<LableResponce>(service.CreateLable(request), "created successfully");
         }
-        [HttpGet("GetByEmail/{UserEmail}")]
-        public IActionResult GetLableByEmail(String UserEmail)
+        [HttpGet("getbyemail")]
+        public ResponceStructure<List<LableResponce>> GetLableByEmail()
         {
-            return Ok(service.GetLableByEmail(UserEmail));
+                 return new ResponceStructure<List<LableResponce>>(service.GetLableByEmail(User.FindFirstValue(ClaimTypes.Email)),"SUCCESS");
+                // return new ResponceStructure<List<LableResponce>>(service.GetLableByEmail("raghum11154@gmail.com"),"SUCCESS");
         }
-        [HttpGet("GetByLableId")]
-        [LableExceptionFilter]
-        public IActionResult GetByLableId(int LableId)
+        [HttpGet("{LableId}")]
+        public ResponceStructure<LableResponce> GetByLableId(int LableId)
         {
-            return Ok(service.GetByLableId(LableId));
+            return new ResponceStructure<LableResponce>( service.GetByLableId(LableId),"Succuss");
         }
-        [HttpPut("UpdateLable")]
-        public IActionResult UpdateLable(LableRequest request)
+        [HttpPut]
+        public ResponceStructure<LableResponce> UpdateLable(LableRequest request,int lableid)
         {
-            return Ok(service.UpdateLable(request)); 
+            request.UserEmail = User.FindFirstValue(ClaimTypes.Email);
+          request.LableId= lableid;
+          //  request.UserEmail = "raghum11154@gmail.com";
+            return  new ResponceStructure<LableResponce>(service.UpdateLable(request),"updated successfully"); 
         }
-        [HttpDelete("DeleteLableByName")]
-        public IActionResult DeleteLable(String UserEmail,String LableName)
+        [HttpDelete]
+        public ResponceStructure<String> DeleteLable(String LableName)
         {
-            return Ok(service.DeleteLable(LableName, UserEmail));
+            return new ResponceStructure<String>(service.DeleteLable(LableName, User.FindFirstValue(ClaimTypes.Email)),"Successfully deleted");
+           // return new ResponceStructure<String>(service.DeleteLable(LableName, "raghum11154@gmail.com"),"Successfully deleted");
         }
         
     }

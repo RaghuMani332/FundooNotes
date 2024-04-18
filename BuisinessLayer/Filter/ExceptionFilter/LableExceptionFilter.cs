@@ -24,6 +24,13 @@ namespace BuisinessLayer.Filter.ExceptionFilter
                 problemdetail.Status = StatusCodes.Status404NotFound;
                 context.Result = new NotFoundObjectResult(problemdetail);
             }
+            else
+            {
+                context.ModelState.AddModelError("Exception occured", context.Exception.Message);
+                ValidationProblemDetails problemdetail = new ValidationProblemDetails(context.ModelState);
+                problemdetail.Status = StatusCodes.Status500InternalServerError;
+                context.Result = new NotFoundObjectResult(problemdetail);
+            }
         }
     }
 }

@@ -29,16 +29,23 @@ namespace BuisinessLayer.service.serviceImpl
 
         public LableResponce CreateLable(LableRequest request)
         {
+            ClearCache();
+            LableResponce responce = new LableResponce();
             int uId = userRepo.GetUserByEmail(request.UserEmail).Result.UserId;
-            if (request.NoteId > 0)
+            foreach (var item in request.NoteId)
             {
-                if (notesRepo.GetById(request.NoteId) != null)
+                if ( item> 0)
                 {
-                    return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), true));
-                }
-                else
-                {
-                    throw new Exception("Lable Not Created Because The Given NoteId is invalid");
+                    
+                        if (notesRepo.GetById(item) != null)
+                        {
+                            return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), true));
+                        }
+                        else
+                        {
+                            throw new Exception("Lable Not Created Because The Given NoteId is invalid");
+                        }
+                    
                 }
             }
             return MapToResponce(lableRepo.CreateLable(MapToEntity(request, uId), false));
@@ -46,9 +53,10 @@ namespace BuisinessLayer.service.serviceImpl
 
         public string? DeleteLable(string lableName, string userEmail)
         {
+            ClearCache();
             if (lableRepo.DeleteLable(lableName, userRepo.GetUserByEmail(userEmail).Result.UserId) == 1)
                 return "Deleted Successfully";
-            else return "Lable NotDeketed";
+            else return "Lable Not Deleted";
         }
 
         public LableResponce GetByLableId(int lableId)
@@ -105,9 +113,11 @@ namespace BuisinessLayer.service.serviceImpl
         public LableResponce UpdateLable(LableRequest request)
         {
             if (request.LableId <= 0)
+            {
                 throw new LableNotFoundException("Invalid Lable Id");
+            }
             ClearCache();
-            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request, userRepo.GetUserByEmail(request.UserEmail).Result.UserId), request.NoteId > 0 ? true : false));
+            return MapToResponce(lableRepo.UpdateLable(MapToEntity(request, userRepo.GetUserByEmail(request.UserEmail).Result.UserId), request.NoteId.Any(e=> e>0)  ? true : false));
         }
 
         private LableEntity MapToEntity(LableRequest request, int Uid)

@@ -2,7 +2,7 @@
 using BuisinessLayer.Entity;
 using BuisinessLayer.MailSender;
 using BuisinessLayer.service.Iservice;
-using Microsoft.Extensions.Logging;
+using NLog;
 using RepositaryLayer.DTO.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
 using System.Text;
@@ -13,11 +13,11 @@ namespace BuisinessLayer.service.serviceImpl
     public class UserServiceImpl : IUserService
     {
         private readonly IUserRepo UserRepo;
-        private readonly ILogger<UserServiceImpl> log;
+        private readonly ILogger log;
         private static string otp;
         private static string mailid;
         private static UserEntity entity;
-        public UserServiceImpl(IUserRepo UserRepo, ILogger<UserServiceImpl> log)
+        public UserServiceImpl(IUserRepo UserRepo, ILogger log)
         {
             this.UserRepo = UserRepo;
             this.log = log;
@@ -45,6 +45,8 @@ namespace BuisinessLayer.service.serviceImpl
         {
             return new UserResponce
             {
+                
+                UserId=responce.UserId,                     
                FirstName= responce.UserFirstName,
                LastName= responce.UserLastName ,
                Email = responce.UserEmail,
@@ -54,7 +56,7 @@ namespace BuisinessLayer.service.serviceImpl
         public Task<int> createUser(UserRequest request)
         {
             var v = UserRepo.createUser(MapToEntity(request));
-            log.LogInformation("User Created");
+            log.Info("User Created");
             return v;
         }
 
@@ -64,21 +66,25 @@ namespace BuisinessLayer.service.serviceImpl
             try
             {
                  entity = UserRepo.GetUserByEmail(Email).Result;
+                if (entity==null)
+                {
+                    throw new UserNotFoundException("UserNotFoundByEmailId");
+                }
             }
             catch(AggregateException e)
             {
-                log.LogError("UserNotFoundByEmailId");
+                log.Error("UserNotFoundByEmailId");
                 throw new UserNotFoundException("UserNotFoundByEmailId");
             }
             if(password.Equals(Decrypt(entity.UserPassword)))
             {
                 var v = Task.FromResult(MapToResponce(entity));
-                log.LogInformation("User lOGED in");
+                log.Info("User lOGED in");
                 return v;
             }
             else
             {
-                log.LogError("Incorrect Password");
+                log.Error("Incorrect Password");
                 throw new PasswordMissmatchException("Incorrect Password");
             }
 
@@ -92,7 +98,7 @@ namespace BuisinessLayer.service.serviceImpl
             }
             catch (Exception e)
             {
-                log.LogError("UserNotFoundByEmailId");
+                log.Error("UserNotFoundByEmailId");
                 throw new UserNotFoundException("UserNotFoundByEmailId" + e.Message);
             }
 
@@ -107,7 +113,7 @@ namespace BuisinessLayer.service.serviceImpl
             mailid = Email;
             MailSenderClass.sendMail(Email, generatedotp);
             //            Console.WriteLine(otp);
-            log.LogInformation(otp +" OTP SENT");
+            log.Info(otp +" OTP SENT");
            return Task.FromResult("MailSent ✔️");
             
         }
@@ -119,12 +125,12 @@ namespace BuisinessLayer.service.serviceImpl
         {
             if (UserServiceImpl.otp==null)
             {
-                log.LogWarning("Generate OTP first");
+                log.Warn("Generate OTP first");
                 return Task.FromResult("Generate Otp First");
             }
             if (Decrypt(entity.UserPassword).Equals(password))
             {
-                log.LogError("Dont give the existing password");
+                log.Error("Dont give the existing password");
                 throw new PasswordMissmatchException("Dont give the existing password");
             }
            
@@ -135,22 +141,22 @@ namespace BuisinessLayer.service.serviceImpl
                    if( UserRepo.UpdatePassword(mailid,Encrypt(password)).Result==1)
                     {
                         entity = null;otp = null;mailid = null;
-                        log.LogInformation("password changed successfully");
+                        log.Info("password changed successfully");
                         return Task.FromResult("password changed successfully");
                     }
                 }
                 else
                 {
-                    log.LogWarning("OTP MissMatching");
+                    log.Warn("OTP MissMatching");
                     return Task.FromResult("otp miss matching");
                 }
             }
             else
             {
-                log.LogWarning("Regex MissMatching");
+                log.Warn("Regex MissMatching");
                 return Task.FromResult("regex is mismatching");
             }
-            log.LogWarning("Password Not Changed");
+            log.Warn("Password Not Changed");
             return Task.FromResult("password not changed");
             
         }
