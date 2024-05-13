@@ -285,6 +285,30 @@ namespace BuisinessLayer.service.serviceImpl
             }
            
         }
+
+        public int UpdateArchive(int noteId, int userId)
+        {
+           return NotesRepo.updateArchive(noteId, userId);
+        }
+
+        public int updateColor(int noteId, int userId, string color)
+        {
+          return  NotesRepo.updateColor(noteId, userId, color);
+
+
+        }
+
+        public int UpdateTrash(int noteId, int userId)
+        {
+           return NotesRepo.UpdateTrash(noteId, userId);
+
+
+        }
+
+        public int permanentDelete(int noteId)
+        {
+            return NotesRepo.permanentDelete(noteId);
+        }
     }
 }
 

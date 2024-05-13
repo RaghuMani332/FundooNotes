@@ -18,7 +18,6 @@ using System.Text;
 
 
 
-
     var builder = WebApplication.CreateBuilder(args);
 
     // Add services to the container.
@@ -154,22 +153,39 @@ builder.Services.AddSingleton<NLog.ILogger>(NLog.LogManager.GetCurrentClassLogge
     });
 
 
-    var app = builder.Build();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:4200", "https://localhost:7004")
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+            .AllowAnyOrigin();
+        });
+});
+
+var app = builder.Build();
+
+app.UseCors("AllowSpecificOrigin");
+app.UseCors();
 
 
 
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
-        app.UseCors(policy =>
+       /* app.UseCors(policy =>
         {
             policy.WithOrigins("http://localhost:7254", "https://localhost:7254")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .WithHeaders(HeaderNames.ContentType);
-        });
+        });*/
     }
 
 

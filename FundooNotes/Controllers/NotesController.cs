@@ -82,7 +82,44 @@ namespace FundooNotes.Controllers
             return new ResponceStructure<NotesResponce>(NotesService.GetByNoteId(noteId), "Success");
             //return Ok(NotesService.GetByNoteId(noteId));
         }
-       
+
+
+
+
+        [HttpPut("/color{noteId}")]
+        public int updateColor(int noteId, string color)
+        {
+            int userId = int.Parse(User.FindFirstValue("Id"));
+             int val = NotesService.updateColor(noteId, userId, color);
+            //return val;
+            return 132;
+
+        }
+
+        [HttpPut("{noteId}")]
+        public int UpdateArchive(int noteId)
+        {
+            int userId = int.Parse(User.FindFirstValue("Id"));
+            var val = NotesService.UpdateArchive(noteId, userId);
+            return val;
+        }
+
+        [HttpPut("/trash{noteId}")]
+        public int UpdateTrash(int noteId)
+        {
+            int userId = int.Parse(User.FindFirstValue("Id"));
+            var val = NotesService.UpdateTrash(noteId, userId);
+            return val;
+        }
+
+        [HttpDelete("/delete")]
+        public int permanentDelete(int noteId)
+        {
+            int userId = int.Parse(User.FindFirstValue("Id"));
+            var val = NotesService.permanentDelete(noteId);
+            return val;
+        }
+
 
     }
 }
