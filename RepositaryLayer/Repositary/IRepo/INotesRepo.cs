@@ -16,6 +16,9 @@ namespace RepositaryLayer.Repositary.IRepo
         void DeleteNotes(int noteId);
         NotesEntity GetById(int noteId);
         List<int> GetUserByNotesIdInCollab(int noteId);
-      
+        int updateArchive(int noteId, int userId);
+        int updateColor(int noteId, int userId, string color);
+        int UpdateTrash(int noteId, int userId);
+        int permanentDelete(int noteId);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
+using CommonLayer.Models;
 using Confluent.Kafka;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RepositaryLayer.DTO.RequestDto;
@@ -13,6 +15,9 @@ namespace FundooNotes.Controllers
     [Route("api/[controller]/")]
     [ApiController]
     [UserExceptionHandlerFilter]
+    [EnableCors]
+
+
     public class UserController : ControllerBase
     {
         private readonly IUserService service;
@@ -73,7 +78,7 @@ namespace FundooNotes.Controllers
             UserResponce response = await service.Login(Email, password);
             if (response != null)
             {
-                var token = GenerateToken(Email);
+                var token = GenerateToken(response);
 
                 Response.Cookies.Append("jwt", token, new CookieOptions
                 {
@@ -82,11 +87,11 @@ namespace FundooNotes.Controllers
                     
                 });
 
-                return Ok(token);
+                return Ok(new ResponceStructure<string>(token,"success"));
             }
             return Unauthorized();
         }
-        private string GenerateToken(string email)
+        private string GenerateToken(UserResponce response)
         {
       
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -94,14 +99,16 @@ namespace FundooNotes.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Email, response.Email),
+                new Claim("Id",response.UserId+""),
+                new Claim(ClaimTypes.Name,response.FirstName)
             };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:Minutes"])),
+                expires: DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["Jwt:Minutes"])),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -119,6 +126,17 @@ namespace FundooNotes.Controllers
         public async Task<IActionResult> ChangePassword(String otp,String password)
         {
             return Ok(await service.ChangePassword(otp,password));
+        }
+
+        [HttpGet("getNameAndEmail")]
+        public UserResponce Get()
+        {
+            return new UserResponce
+            {
+                FirstName = User.FindFirstValue(ClaimTypes.Name),
+                Email = User.FindFirstValue(ClaimTypes.Email)
+            };
+
         }
     }
 }

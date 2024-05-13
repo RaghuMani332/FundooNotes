@@ -164,6 +164,88 @@ namespace RepositaryLayer.Repositary.RepoImpl
                                                         "NotesId = @NoteId", new {NoteId=noteId}).ToList();
         }
 
-        
+        public int updateColor(int noteId, int userId, string colour)
+        {
+            try
+            {
+                var selectQuery = "SELECT NoteId FROM Notes_Entity WHERE UserId = @UserId AND NoteId = @UserNotesId";
+
+                using (var connection = Context.CreateConnection())
+                {
+                    var currentNoteId = connection.QueryFirstOrDefault<int>(selectQuery, new { UserId = userId, UserNotesId = noteId });
+                    if (currentNoteId == 0)
+                    {
+                        throw new FileNotFoundException("Note not found");
+                    }
+
+                    var updateQuery = "UPDATE Notes_Entity SET BgColor = @Colour WHERE NoteId = @UserNotesId AND UserId = @UserId";
+                    var parameters = new { UserId = userId, UserNotesId = noteId, Colour = colour };
+
+                    return connection.Execute(updateQuery, parameters);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public int updateArchive(int noteId, int userId)
+        {
+            try
+            {
+                var selectQuery = "SELECT NoteId FROM Notes_Entity WHERE UserId = @UserId AND NoteId = @UserNotesId";
+
+                using (var connection = Context.CreateConnection())
+                {
+                    var currentNoteId = connection.QueryFirstOrDefault<int>(selectQuery, new { UserId = userId, UserNotesId = noteId });
+                    if (currentNoteId == 0)
+                    {
+                        throw new FileNotFoundException("Note not found");
+                    }
+                    var updateQuery = "UPDATE Notes_Entity SET IsArchive = CASE WHEN IsArchive  = 0 THEN 1 ELSE 0 END WHERE NoteId = @UserNotesId AND UserId = @UserId";
+                    var parameters = new { UserId = userId, UserNotesId = noteId };
+
+                    return connection.Execute(updateQuery, parameters);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public int UpdateTrash(int noteId, int userId)
+        {
+            try
+            {
+                var selectQuery = "SELECT NoteId FROM Notes_Entity WHERE UserId = @UserId AND NoteId = @UserNotesId";
+
+                using (var connection = Context.CreateConnection())
+                {
+                    var currentNote = connection.QueryFirstOrDefault<int>(selectQuery, new { UserId = userId, UserNotesId = noteId });
+
+                    if (currentNote == null)
+                    {
+                        throw new FileNotFoundException("Note not found");
+                    }
+
+                    var updateQuery = "UPDATE Notes_Entity SET IsTrash = CASE WHEN IsTrash = 0 THEN 1 ELSE 0 END WHERE NoteId = @UserNotesId AND UserId = @UserId";
+
+                    var parameters = new { UserId = userId, UserNotesId = noteId };
+
+                    return connection.Execute(updateQuery, parameters);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public int permanentDelete(int noteId)
+        {
+            return Context.CreateConnection().Execute("UPDATE Notes_Entity SET IsPermanentDelete = 1", new { NoteId = noteId });
+        }
     }
 }
